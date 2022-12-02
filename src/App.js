@@ -74,7 +74,15 @@ function App() {
           }
       }else{
         if(Cliente.cedula != "" && Cliente.nombre != "" && Cliente.direccion != "" && Cliente.telefono != ""){
-          const { data } = await axios.post('https://codigomarret.online/facturacion/cedula',{Cliente})
+          let info = {
+            cedula:Cliente.cedula,
+            nombre:Cliente.nombre,
+            direccion:Cliente.direccion,
+            telefono:Cliente.telefono,
+            razon_social:Cliente.nombre,
+            email:Cliente.email
+          }
+          const { data } = await axios.post('https://codigomarret.online/facturacion/cedula',{info})
           limpiaCliente()
           if(data){
             Modal.success({
