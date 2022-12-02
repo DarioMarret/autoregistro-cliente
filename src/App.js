@@ -38,7 +38,7 @@ function App() {
       })
       if(e.target.value.length == 10 || e.target.value.length == 13){
           let cedula = e.target.value
-          const { data } = await axios.get(`https://codigomarret.online/facturacion/cedula/${cedula}`)
+          const { data } = await axios.get('https://codigomarret.online/facturacion/cedula/'+cedula)
           if(data.success){
             setCliente({
               ...Cliente,
@@ -63,41 +63,40 @@ function App() {
       ...Cliente,
       razon_social: Cliente.nombre
     })
-      if(Cliente.id != ""){
-          const { data } = await axios.put('https://codigomarret.online/facturacion/cedula_refrescar',{Cliente})
-          limpiaCliente()
-          if(data){
-            Modal.success({
-              title:'Soy Cliente',
-              content:'Datos Actualizado'
-            })
-          }
-      }else{
-        if(Cliente.cedula != "" && Cliente.nombre != "" && Cliente.direccion != "" && Cliente.telefono != ""){
-          let info = {
-            cedula:Cliente.cedula,
-            nombre:Cliente.nombre,
-            direccion:Cliente.direccion,
-            telefono:Cliente.telefono,
-            razon_social:Cliente.nombre,
-            email:Cliente.email
-          }
-          const { data } = await axios.post('https://codigomarret.online/facturacion/cedula',{info})
-          limpiaCliente()
-          if(data){
-            Modal.success({
-              title:'Soy Cliente',
-              content:'Datos registrados'
-            })
-          }
-        }else{
-          limpiaCliente()
-          Modal.error({
-            title:'Soy Cliente',
-            content:'Datos incompletos llenar todos los campos'
-          })
-        }
+
+    if(Cliente.cedula != "" && Cliente.nombre != "" && Cliente.direccion != "" && Cliente.telefono != ""){
+      let info = {
+        id:Cliente.id,
+        cedula:Cliente.cedula,
+        nombre:Cliente.nombre.toLocaleUpperCase(),
+        direccion:Cliente.direccion,
+        telefono:Cliente.telefono,
+        razon_social:Cliente.nombre.toLocaleUpperCase(),
+        email:Cliente.email
       }
+      const { data } = await axios.post('https://codigomarret.online/facturacion/cedula',info)
+
+      if (data.success == false && data.message == "La cedula ya se encuentra registrada") {
+        await axios.put("https://codigomarret.online/facturacion/cedula_refrescar",info)
+        limpiaCliente()
+        Modal.error({
+          title:'Soy Cliente',
+          content:'Datos incompletos llenar todos los campos'
+        })
+      }else{
+        limpiaCliente()
+        Modal.success({
+          title:'Soy Cliente',
+          content:'Datos guardados correctamente'
+        })
+      }
+    }else{
+      Modal.error({
+        title:'Soy Cliente',
+        content:'Datos incompletos llenar todos los campos'
+      })
+
+    }
   }
   return (
       <Container>
@@ -174,7 +173,7 @@ function App() {
                           className="form-control"
                           onClick={()=>btn_login_on_click()}
                       >
-                          {Cliente.id != null ? 'Actualizar' : 'Registrar'}
+                          {Cliente.id != "" ? 'Actualizar' : 'Registrar'}
                       </Button>
                   </Form>
               </Col>
