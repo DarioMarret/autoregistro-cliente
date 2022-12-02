@@ -32,26 +32,11 @@ function App() {
 
   const handleTextImput = async(e) => {
     try {
-      setCliente({
-        ...Cliente,
-        [e.target.name]:e.target.value
-      })
       if(e.target.value.length == 10 || e.target.value.length == 13){
-          let cedula = e.target.value
-          const { data } = await axios.get('https://codigomarret.online/facturacion/cedula/'+cedula)
-          if(data.success){
-            setCliente({
-              ...Cliente,
-              id: data.data.id,
-              nombre:data.data.nombre,
-              cedula:data.data.cedula,
-              direccion:data.data.direccion,
-              telefono:data.data.telefono,
-              razon_social:data.data.razon_social,
-              email:data.data.email
-            })
-            console.log(data)
-          }
+        setCliente({
+          ...Cliente,
+          [e.target.name]:e.target.value
+        })
       }
     } catch (error) {
       console.log(error)      
@@ -59,10 +44,6 @@ function App() {
   }
 
   const btn_login_on_click =async()=>{
-    setCliente({
-      ...Cliente,
-      razon_social: Cliente.nombre
-    })
 
     if(Cliente.cedula != "" && Cliente.nombre != "" && Cliente.direccion != "" && Cliente.telefono != ""){
       let info = {
@@ -74,14 +55,14 @@ function App() {
         razon_social:Cliente.nombre.toLocaleUpperCase(),
         email:Cliente.email
       }
-      const { data } = await axios.post('https://codigomarret.online/facturacion/cedula',info)
+      const { data } = await axios.post('https://codigomarret.online/facturacion/cedula_autoregistri',info)
 
       if (data.success == false && data.message == "La cedula ya se encuentra registrada") {
         await axios.put("https://codigomarret.online/facturacion/cedula_refrescar",info)
         limpiaCliente()
-        Modal.error({
+        Modal.warn({
           title:'Soy Cliente',
-          content:'Datos incompletos llenar todos los campos'
+          content:'Datos actualizados correctamente'
         })
       }else{
         limpiaCliente()
@@ -93,7 +74,7 @@ function App() {
     }else{
       Modal.error({
         title:'Soy Cliente',
-        content:'Datos incompletos llenar todos los campos'
+        content:'Datos incompletos llenar todos los campos recuerde que el campo cedula debe tener 10 0 13 digitos'
       })
 
     }
