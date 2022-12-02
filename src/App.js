@@ -107,7 +107,7 @@ function App() {
                   className="p-5 m-auto text-center shadow-lg rounded-lg "
               >
                   {/* <h3 className="text-center">{empresa}</h3> */}
-                  <i>Registrar datos para la emisión de su factura electronico </i>
+                  <i>Registrar datos para la emisión de su factura electronica </i>
                   <Form>
                       <Form.Label className="d-flex text-start">Cedula/Ruc</Form.Label>
                       <InputGroup className="mb-1">
