@@ -3,6 +3,7 @@ import { Col, Container, Row, Form, Button, InputGroup, FormControl, Modal as Mo
 import {  FiAirplay, FiUser, FiUsers, FiAtSign, FiPhone, FiArrowRight, FiBriefcase } from "react-icons/fi";
 import axios from "axios"
 import { Modal } from "antd"
+import isEmpty from "is-empty";
 
 const Instance = axios.create({
   baseURL: "https://codigomarret.online/facturacion/cedula/",
@@ -66,45 +67,48 @@ function App() {
 
   const btn_login_on_click =async()=>{
 
-    console.log(Cliente.cedula.length)
-    if(Cliente.cedula.length !== 10 || Cliente.cedula.length !== 13){
-      Modal.warn({
-        title: 'Información',
-        content: 'recuerde que la cedula debe tener 10 o 13 digitos',
-      });
-      return
-    }
-    if(Cliente.cedula !== "" && Cliente.nombre !== "" && Cliente.direccion !== "" && Cliente.telefono !== ""){
-      let info = {
-        id:Cliente.id,
-        cedula:Cliente.cedula,
-        nombre:Cliente.nombre.toLocaleUpperCase(),
-        direccion:Cliente.direccion,
-        telefono:Cliente.telefono,
-        razon_social:Cliente.nombre.toLocaleUpperCase(),
-        email:Cliente.email
-      }
-      console.log(info)
-      const { data } = await axios.post('https://codigomarret.online/facturacion/cedula_autoregistri',info)
-      // const { data } = await axios.post('http://localhost:4001/cedula_autoregistri',info)
+    if(!isEmpty(Cliente.cedula) && !isEmpty(Cliente.nombre) && !isEmpty(Cliente.direccion) && !isEmpty(Cliente.telefono)){
 
-      console.log(data)
+      console.log(Cliente.cedula.length)
+      console.log(Cliente.cedula)
+      if(Cliente.cedula.length === 10 || Cliente.cedula.length === 13){
+        let info = {
+          id:Cliente.id,
+          cedula:Cliente.cedula,
+          nombre:Cliente.nombre.toLocaleUpperCase(),
+          direccion:Cliente.direccion,
+          telefono:Cliente.telefono,
+          razon_social:Cliente.nombre.toLocaleUpperCase(),
+          email:Cliente.email
+        }
+        console.log(info)
+        const { data } = await axios.post('https://codigomarret.online/facturacion/cedula_autoregistri',info)
+        // const { data } = await axios.post('http://localhost:4001/cedula_autoregistri',info)
 
-      if (data.success === false && data.message !== "no ha guardado el archivo") {
-        await axios.put("https://codigomarret.online/facturacion/cedula_refrescar",info)
-        // await axios.put("http://localhost:4001/cedula_refrescar",info)
-        limpiaCliente()
-        Modal.success({
-          title:'Soy Cliente',
-          content:'Datos actualizados correctamente'
-        })
+        console.log(data)
+
+        if (data.success === false && data.message !== "no ha guardado el archivo") {
+          await axios.put("https://codigomarret.online/facturacion/cedula_refrescar",info)
+          // await axios.put("http://localhost:4001/cedula_refrescar",info)
+          limpiaCliente()
+          Modal.success({
+            title:'Soy Cliente',
+            content:'Datos actualizados correctamente'
+          })
+        }else{
+          limpiaCliente()
+          Modal.success({
+            title:'Soy Cliente',
+            content:'Datos guardados correctamente'
+          })
+        }
       }else{
-        limpiaCliente()
-        Modal.success({
-          title:'Soy Cliente',
-          content:'Datos guardados correctamente'
-        })
+        Modal.warn({
+          title: 'Información',
+          content: 'recuerde que la cedula debe tener 10 o 13 digitos',
+        });
       }
+
     }else{
       Modal.error({
         title:'Soy Cliente',
