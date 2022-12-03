@@ -4,6 +4,13 @@ import {  FiAirplay, FiUser, FiUsers, FiAtSign, FiPhone, FiArrowRight, FiBriefca
 import axios from "axios"
 import { Modal } from "antd"
 
+const Instance = axios.create({
+  // baseURL: "https://codigomarret.online/facturacion/cedula/",
+  baseURL: "http://localhost:4001/cedula/",
+  timeout: 1000,
+  headers: { "Content-Type": "application/json" },
+});
+
 function App() {
   const [Cliente, setCliente] = useState({
     id:"",
@@ -32,11 +39,25 @@ function App() {
 
   const handleTextImput = async(e) => {
     try {
-      if(e.target.value.length == 10 || e.target.value.length == 13){
-        setCliente({
-          ...Cliente,
-          [e.target.name]:e.target.value
-        })
+      const { name, value } = e.target;
+      setCliente({
+        ...Cliente,
+        [name]:value
+      })
+      if(name === "cedula"){
+        if(value.length === 10 || value.length === 13){
+          const {data , status} = await Instance.get(value)
+          if(status === 200){
+            setCliente({
+              ...Cliente,
+              nombre:data.data.nombre,
+              cedula:data.data.cedula,
+              direccion:data.data.direccion,
+              email:data.data.email,
+              telefono:data.data.telefono,
+            })
+          }
+        }
       }
     } catch (error) {
       console.log(error)      
@@ -45,7 +66,7 @@ function App() {
 
   const btn_login_on_click =async()=>{
 
-    if(Cliente.cedula != "" && Cliente.nombre != "" && Cliente.direccion != "" && Cliente.telefono != ""){
+    if(Cliente.cedula !== "" && Cliente.nombre !== "" && Cliente.direccion !== "" && Cliente.telefono !== ""){
       let info = {
         id:Cliente.id,
         cedula:Cliente.cedula,
@@ -55,12 +76,17 @@ function App() {
         razon_social:Cliente.nombre.toLocaleUpperCase(),
         email:Cliente.email
       }
+      console.log(info)
       const { data } = await axios.post('https://codigomarret.online/facturacion/cedula_autoregistri',info)
+      // const { data } = await axios.post('http://localhost:4001/cedula_autoregistri',info)
 
-      if (data.success == false && data.message == "La cedula ya se encuentra registrada") {
+      console.log(data)
+
+      if (data.success === false && data.message !== "no ha guardado el archivo") {
         await axios.put("https://codigomarret.online/facturacion/cedula_refrescar",info)
+        // await axios.put("http://localhost:4001/cedula_refrescar",info)
         limpiaCliente()
-        Modal.warn({
+        Modal.success({
           title:'Soy Cliente',
           content:'Datos actualizados correctamente'
         })
