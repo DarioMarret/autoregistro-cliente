@@ -5,8 +5,8 @@ import axios from "axios"
 import { Modal } from "antd"
 
 const Instance = axios.create({
-  // baseURL: "https://codigomarret.online/facturacion/cedula/",
-  baseURL: "http://localhost:4001/cedula/",
+  baseURL: "https://codigomarret.online/facturacion/cedula/",
+  // baseURL: "http://localhost:4001/cedula/",
   timeout: 1000,
   headers: { "Content-Type": "application/json" },
 });
