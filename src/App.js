@@ -66,6 +66,14 @@ function App() {
 
   const btn_login_on_click =async()=>{
 
+    console.log(Cliente.cedula.length)
+    if(Cliente.cedula.length !== 10 || Cliente.cedula.length !== 13){
+      Modal.warn({
+        title: 'Información',
+        content: 'recuerde que la cedula debe tener 10 o 13 digitos',
+      });
+      return
+    }
     if(Cliente.cedula !== "" && Cliente.nombre !== "" && Cliente.direccion !== "" && Cliente.telefono !== ""){
       let info = {
         id:Cliente.id,
@@ -121,6 +129,8 @@ function App() {
                           <FormControl
                               placeholder="Ingresar cedula o ruc"
                               name="cedula"
+                              minLength={10}
+                              maxLength={13}
                               value={Cliente.cedula}
                               onChange={handleTextImput}
                           />
