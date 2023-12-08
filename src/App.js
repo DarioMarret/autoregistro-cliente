@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react"
-import { Col, Container, Row, Form, Button, InputGroup, FormControl, Modal as ModalSpinner } from "react-bootstrap";
-import {  FiAirplay, FiUser, FiUsers, FiAtSign, FiPhone, FiArrowRight, FiBriefcase } from "react-icons/fi";
-import axios from "axios"
-import { Modal } from "antd"
+import { Modal } from "antd";
+import axios from "axios";
 import isEmpty from "is-empty";
+import { useState } from "react";
+import { Button, Col, Container, Form, FormControl, InputGroup, Row } from "react-bootstrap";
+import { FiAirplay, FiArrowRight, FiAtSign, FiPhone, FiUser } from "react-icons/fi";
 
 const Instance = axios.create({
-  baseURL: "https://codigomarret.online/facturacion/cedula/",
+  baseURL: "https://ordenfacil.org/facturacion/cedula/",
   // baseURL: "http://localhost:4001/cedula/",
   timeout: 1000,
   headers: { "Content-Type": "application/json" },
@@ -61,7 +61,7 @@ function App() {
         }
       }
     } catch (error) {
-      console.log(error)      
+      console.log(error)
     }
   }
 
@@ -82,13 +82,13 @@ function App() {
           email:Cliente.email
         }
         console.log(info)
-        const { data } = await axios.post('https://codigomarret.online/facturacion/cedula_autoregistri',info)
+        const { data } = await axios.post('https://ordenfacil.org/facturacion/cedula_autoregistri',info)
         // const { data } = await axios.post('http://localhost:4001/cedula_autoregistri',info)
 
         console.log(data)
 
         if (data.success === false && data.message !== "no ha guardado el archivo") {
-          await axios.put("https://codigomarret.online/facturacion/cedula_refrescar",info)
+          await axios.put("https://ordenfacil.org/facturacion/cedula_refrescar",info)
           // await axios.put("http://localhost:4001/cedula_refrescar",info)
           limpiaCliente()
           Modal.success({
