@@ -71,7 +71,7 @@ function App() {
 
       console.log(Cliente.cedula.length)
       console.log(Cliente.cedula)
-      if(Cliente.cedula.length === 10 || Cliente.cedula.length === 13){
+      // if(Cliente.cedula.length === 10 || Cliente.cedula.length === 13){
         let info = {
           id:Cliente.id,
           cedula:Cliente.cedula,
@@ -102,12 +102,12 @@ function App() {
             content:'Datos guardados correctamente'
           })
         }
-      }else{
-        Modal.warn({
-          title: 'Información',
-          content: 'recuerde que la cedula debe tener 10 o 13 digitos',
-        });
-      }
+      // }else{
+      //   Modal.warn({
+      //     title: 'Información',
+      //     content: 'recuerde que la cedula debe tener 10 o 13 digitos',
+      //   });
+      // }
 
     }else{
       Modal.error({
