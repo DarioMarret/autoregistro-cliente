@@ -2,205 +2,317 @@ import { Modal } from "antd";
 import axios from "axios";
 import isEmpty from "is-empty";
 import { useState } from "react";
-import { Button, Col, Container, Form, FormControl, InputGroup, Row } from "react-bootstrap";
-import { FiAirplay, FiArrowRight, FiAtSign, FiPhone, FiUser } from "react-icons/fi";
+import {
+  Button,
+  Col,
+  Container,
+  Form,
+  FormControl,
+  InputGroup,
+  Row,
+} from "react-bootstrap";
+import {
+  FiAirplay,
+  FiArrowRight,
+  FiAtSign,
+  FiPhone,
+  FiUser,
+} from "react-icons/fi";
+
+// ✅ Simulación de mesas disponibles con propiedad correcta
+const mesasDisponibles = [
+  { id_mesa: 1, mesa: "Mesa 1" },
+  { id_mesa: 2, mesa: "Mesa 2" },
+  { id_mesa: 3, mesa: "Mesa 3" },
+];
 
 const Instance = axios.create({
-  baseURL: "https://ordenfacil.org/api_facturacion/cedula/",
-  // baseURL: "http://localhost:4001/cedula/",
+  // baseURL: "https://dev.ordenfacil.org/",
+  baseURL: "http://192.168.0.107:7585/",
   timeout: 1000,
   headers: { "Content-Type": "application/json" },
 });
 
 function App() {
+  // por la url me pasan el id_empresa y opcional el id_mesa
+  const urlParams = new URLSearchParams(window.location.search);
+  const id_empresa = urlParams.get("id_empresa");
+  const id_mesa = urlParams.get("id_mesa") || 0;
   const [Cliente, setCliente] = useState({
-    id:"",
-    razon_social:"",
-    nombre:"",
-    email:"",
-    correo:"",
-    direccion:"",
-    telefono:"",
-    cedula:""
-  })
+    id: 0,
+    razonsocial: "",
+    nombre: "",
+    email: "",
+    correo: "",
+    direccion: "",
+    telefono: "",
+    ruc: "",
+    id_mesa: id_mesa,
+    id_empresa: id_empresa || 0,
+    ciudad: "",
+  });
 
-  function limpiaCliente(){
+  const limpiaCliente = () => {
     setCliente({
-      id:"",
-      razon_social:"",
-      nombre:"",
-      email:"",
-      correo:"",
-      direccion:"",
-      telefono:"",
-      cedula:""
-    })
-  }
+      id: 0,
+      razonsocial: "",
+      nombre: "",
+      email: "",
+      correo: "",
+      direccion: "",
+      telefono: "",
+      ruc: "",
+      id_mesa: id_mesa,
+      id_empresa: Number(id_empresa) || 0,
+      ciudad: "",
+    });
+  };
 
-
-  const handleTextImput = async(e) => {
+  const ConsultarSIRUC = async (ruc) => {
     try {
-      const { name, value } = e.target;
-      setCliente({
-        ...Cliente,
-        [name]:value
-      })
-      if(name === "cedula"){
-        if(value.length === 10 || value.length === 13){
-          const {data , status} = await Instance.get(value)
-          if(status === 200){
-            setCliente({
-              ...Cliente,
-              nombre:data.data.nombre,
-              cedula:data.data.cedula,
-              direccion:data.data.direccion,
-              email:data.data.email,
-              telefono:data.data.telefono,
-            })
-          }
-        }
+      const { data, status } = await Instance.post(`clientesConsultarRucSri`, {
+        ruc: ruc,
+      });
+      console.log("🔍 Respuesta de SIRUC:", data);
+      if (status === 200) {
+        setCliente((prev) => ({
+          ...prev,
+          ruc: data.data[0].numeroRuc,
+          nombre: data.data[0].razonSocial,
+          razonsocial: data.data[0].razonSocial,
+        }));
       }
     } catch (error) {
-      console.log(error)
-    }
-  }
-
-  const btn_login_on_click =async()=>{
-
-    if(!isEmpty(Cliente.cedula) && !isEmpty(Cliente.nombre) && !isEmpty(Cliente.direccion) && !isEmpty(Cliente.telefono)){
-
-      console.log(Cliente.cedula.length)
-      console.log(Cliente.cedula)
-      // if(Cliente.cedula.length === 10 || Cliente.cedula.length === 13){
-        let info = {
-          id:Cliente.id,
-          cedula:Cliente.cedula,
-          nombre:Cliente.nombre.toLocaleUpperCase(),
-          direccion:Cliente.direccion,
-          telefono:Cliente.telefono,
-          razon_social:Cliente.nombre.toLocaleUpperCase(),
-          email:Cliente.email
-        }
-        console.log(info)
-        const { data } = await axios.post('https://ordenfacil.org/api_facturacion/cedula_autoregistri',info)
-        // const { data } = await axios.post('http://localhost:4001/cedula_autoregistri',info)
-
-        console.log(data)
-
-        if (data.success === false && data.message !== "no ha guardado el archivo") {
-          await axios.put("https://ordenfacil.org/api_facturacion/cedula_refrescar",info)
-          // await axios.put("http://localhost:4001/cedula_refrescar",info)
-          limpiaCliente()
-          Modal.success({
-            title:'Soy Cliente',
-            content:'Datos actualizados correctamente'
-          })
-        }else{
-          limpiaCliente()
-          Modal.success({
-            title:'Soy Cliente',
-            content:'Datos guardados correctamente'
-          })
-        }
-      // }else{
-      //   Modal.warn({
-      //     title: 'Información',
-      //     content: 'recuerde que la cedula debe tener 10 o 13 digitos',
-      //   });
-      // }
-
-    }else{
+      console.error("❌ Error al consultar SIRUC:", error);
       Modal.error({
-        title:'Soy Cliente',
-        content:'Datos incompletos llenar todos los campos recuerde que el campo cedula debe tener 10 0 13 digitos'
-      })
-
+        title: "❌ Error al consultar SIRUC",
+        content: "No se pudo obtener información del RUC/Cédula.",
+      });
     }
-  }
+  };
+
+  const handleTextImput = async (e) => {
+    const { name, value } = e.target;
+    console.log("✍️ Cambiando campo:", name, "con valor:", value);
+    setCliente((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    console.log("🔍 Buscando cédula o RUC:", value);
+    if (name === "ruc" && (value.length === 10 || value.length === 13)) {
+      try {
+        const { data, status } = await Instance.post("clientesBuscar", {
+          buscar: value,
+          id_empresa: Number(id_empresa) || 0,
+          id_mesa: null,
+        });
+        console.log("🔍 Resultado de búsqueda:", data);
+        if (status === 200 && data.status === 200) {
+          limpiaCliente();
+          setCliente((prev) => ({
+            ...prev,
+            ruc: data.data.ruc,
+            nombre: data.data.nombre,
+            razonsocial: data.data.razonsocial || data.data.nombre,
+            cedula: data.data.cedula,
+            direccion: data.data.direccion,
+            email: data.data.email,
+            telefono: data.data.telefono,
+            ciudad: data.data.ciudad || "",
+          }));
+        } else {
+          await ConsultarSIRUC(value);
+        }
+      } catch (error) {
+        console.error("❌ Error al buscar cédula:", error);
+      }
+    }
+  };
+
+  const btn_login_on_click = async () => {
+    console.log("🔍 Enviando datos del cliente:", Cliente);
+    if (
+      !isEmpty(Cliente.ruc) &&
+      !isEmpty(Cliente.razonsocial) &&
+      !isEmpty(Cliente.direccion) &&
+      !isEmpty(Cliente.telefono)
+    ) {
+      const info = {
+        id: Cliente.id,
+        ruc: Cliente.ruc,
+        nombre: Cliente.nombre.toUpperCase(),
+        razonsocial: Cliente.razonsocial.toUpperCase(),
+        direccion: Cliente.direccion,
+        telefono: Cliente.telefono,
+        celular: Cliente.telefono,
+        email: Cliente.email,
+        id_mesa: Number(Cliente.id_mesa),
+        id_empresa: Number(Cliente.id_empresa),
+        ciudad: Cliente.ciudad || "",
+      };
+
+      try {
+        const { data } = await Instance.post(
+          "clientesRegistrarMovil",
+          info
+        );
+        console.log("✅ Respuesta del servidor:", data);
+        if (data.status === 400) {
+          Modal.success({ title: "✅ Datos actualizados correctamente" });
+        } else {
+          Modal.success({ title: "✅ Datos guardados correctamente" });
+        }
+        limpiaCliente();
+      } catch (error) {
+        Modal.error({
+          title: "❌ Error al guardar datos",
+          content: error.message,
+        });
+      }
+    } else {
+      Modal.error({
+        title: "❗ Datos incompletos",
+        content:
+          "Llenar todos los campos. La cédula debe tener 10 o 13 dígitos.",
+      });
+    }
+  };
+
   return (
-      <Container>
+    <Container>
+      <Row className="vh-100 justify-content-center align-items-center">
+        <Col lg={6} md={8} sm={12} className="p-4 shadow-lg rounded bg-white">
+          <h4 className="mb-3 text-center fw-bold">
+            📄 Registro de Datos para Facturación
+          </h4>
+          <Form>
+            <Form.Group className="mb-2">
+              <Form.Label>Cédula / RUC</Form.Label>
+              <InputGroup>
+                <InputGroup.Text>
+                  <FiAirplay />
+                </InputGroup.Text>
+                <FormControl
+                  name="ruc"
+                  placeholder="Ej: 0102030405"
+                  value={Cliente.ruc}
+                  onChange={handleTextImput}
+                  maxLength={13}
+                />
+              </InputGroup>
+            </Form.Group>
 
-          <Row className="m-0 vh-100 justify-content-center align-items-center">
-              <Col lg={5} md={6} sm={12}
-                  className="p-5 m-auto text-center shadow-lg rounded-lg "
-              >
-                  {/* <h3 className="text-center">{empresa}</h3> */}
-                  <i>Registrar datos para la emisión de su factura electronica </i>
-                  <Form>
-                      <Form.Label className="d-flex text-start">Cedula/Ruc</Form.Label>
-                      <InputGroup className="mb-1">
-                          <InputGroup.Text id="basic-addon1"><FiAirplay /></InputGroup.Text>
-                          <FormControl
-                              placeholder="Ingresar cedula o ruc"
-                              name="cedula"
-                              minLength={10}
-                              maxLength={13}
-                              value={Cliente.cedula}
-                              onChange={handleTextImput}
-                          />
-                      </InputGroup>
+            <Form.Group className="mb-2">
+              <Form.Label>Nombres</Form.Label>
+              <InputGroup>
+                <InputGroup.Text>
+                  <FiUser />
+                </InputGroup.Text>
+                <FormControl
+                  name="nombre"
+                  placeholder="Ej: Juan Pérez"
+                  value={Cliente.nombre}
+                  onChange={handleTextImput}
+                />
+              </InputGroup>
+            </Form.Group>
 
-                      <Form.Label className="d-flex text-start">Nombres</Form.Label>
-                      <InputGroup className="mb-1">
-                          <InputGroup.Text id="basic-addon2"><FiUser /></InputGroup.Text>
-                          <FormControl
-                              placeholder="Ingresar nombres completo"
-                              type="text"
-                              name="nombre"
-                              value={Cliente.nombre}
-                              onChange={handleTextImput}
-                          />
-                      </InputGroup>
+            <Form.Group className="mb-2">
+              <Form.Label>Email</Form.Label>
+              <InputGroup>
+                <InputGroup.Text>
+                  <FiAtSign />
+                </InputGroup.Text>
+                <FormControl
+                  name="email"
+                  placeholder="Ej: correo@email.com"
+                  value={Cliente.email}
+                  onChange={handleTextImput}
+                />
+              </InputGroup>
+            </Form.Group>
 
-                      <Form.Label className="d-flex text-start">Email</Form.Label>
-                      <InputGroup className="mb-1">
-                      <InputGroup.Text id="basic-addon2"><FiAtSign /></InputGroup.Text>
-                          <FormControl
-                              placeholder="Ingresar email"
-                              type="text"
-                              name="email"
-                              value={Cliente.email}
-                              onChange={handleTextImput}
-                          />
-                      </InputGroup>
+            <Form.Group className="mb-2">
+              <Form.Label>Teléfono</Form.Label>
+              <InputGroup>
+                <InputGroup.Text>
+                  <FiPhone />
+                </InputGroup.Text>
+                <FormControl
+                  name="telefono"
+                  placeholder="Ej: 0991234567"
+                  value={Cliente.telefono}
+                  onChange={handleTextImput}
+                />
+              </InputGroup>
+            </Form.Group>
 
-                      <Form.Label className="d-flex text-start">Telefono</Form.Label>
-                      <InputGroup className="mb-1">
-                          <InputGroup.Text id="basic-addon2"><FiPhone /></InputGroup.Text>
-                          <FormControl
-                              placeholder="Ingresar telefono"
-                              type="text"
-                              value={Cliente.telefono}
-                              name="telefono"
-                              onChange={handleTextImput}
-                          />
-                      </InputGroup>
+            <Form.Group className="mb-2">
+              <Form.Label>Dirección</Form.Label>
+              <InputGroup>
+                <InputGroup.Text>
+                  <FiArrowRight />
+                </InputGroup.Text>
+                <FormControl
+                  name="direccion"
+                  placeholder="Ej: Av. Central 123"
+                  value={Cliente.direccion}
+                  onChange={handleTextImput}
+                />
+              </InputGroup>
+            </Form.Group>
 
-                      <Form.Label className="d-flex text-start">Direccion</Form.Label>
-                      <InputGroup className="mb-1">
-                          <InputGroup.Text id="basic-addon2"><FiArrowRight /></InputGroup.Text>
-                          <FormControl
-                              placeholder="ingresar una direccion"
-                              type="text"
-                              name="direccion"
-                              value={Cliente.direccion}
-                              onChange={handleTextImput}
-                          />
-                      </InputGroup>
-                      <br />
-                      <Button
-                          variant="primary btn-block"
-                          type="button"
-                          className="form-control"
-                          onClick={()=>btn_login_on_click()}
-                      >
-                          {Cliente.id != "" ? 'Actualizar' : 'Registrar'}
-                      </Button>
-                  </Form>
-              </Col>
-          </Row>
-      </Container>
-  )
+            {/* Ciudad */}
+            <Form.Group className="mb-2">
+              <Form.Label>Ciudad</Form.Label>
+              <InputGroup>
+                <InputGroup.Text>
+                  <FiAirplay />
+                </InputGroup.Text>
+                <FormControl
+                  name="ciudad"
+                  placeholder="Ej: Quito"
+                  value={Cliente.ciudad}
+                  onChange={handleTextImput}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Seleccionar Mesa</Form.Label>
+              <InputGroup>
+                <InputGroup.Text>
+                  <FiAirplay />
+                </InputGroup.Text>
+                <Form.Select
+                  name="id_mesa"
+                  value={String(Cliente.id_mesa)}
+                  onChange={handleTextImput}
+                >
+                  <option value="0" disabled>
+                    Seleccione una mesa...
+                  </option>
+                  {mesasDisponibles.map((mesa) => (
+                    <option key={mesa.id_mesa} value={mesa.id_mesa}>
+                      {mesa.mesa}
+                    </option>
+                  ))}
+                </Form.Select>
+              </InputGroup>
+            </Form.Group>
+
+            <Button
+              variant="primary"
+              className="w-100"
+              onClick={btn_login_on_click}
+            >
+              {Cliente.id !== 0 ? "Actualizar" : "Registrar"}
+            </Button>
+          </Form>
+        </Col>
+      </Row>
+    </Container>
+  );
 }
 
 export default App;
